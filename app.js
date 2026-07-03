@@ -5,15 +5,14 @@ const _ext = window.TENVESTOR_CONFIG || {};
 const CONFIG = {
   EXIM_API_KEY: _ext.EXIM_API_KEY || '',
   DART_API_KEY: _ext.DART_API_KEY || '',
-  CORS_PROXY:   'https://corsproxy.io/?',
   CACHE_TTL:    5  * 60 * 1000,
   EXIM_TTL:     30 * 60 * 1000,
   DART_TTL:     24 * 60 * 60 * 1000,
 };
 
-// ── 회사별 Google News 검색 쿼리 ─────────────────────────
+// ── 회사별 뉴스 검색 쿼리 (미국: Google News / 한국: 네이버 뉴스) ──
 const COMPANIES = {
-  // 미국
+  // 미국 (Google News RSS)
   google:       { label: 'Google',          queries: ['Google AI Alphabet stock'] },
   ibm:          { label: 'IBM',             queries: ['IBM quantum AI news'] },
   nvidia:       { label: 'Nvidia',          queries: ['Nvidia GPU AI stock'] },
@@ -26,27 +25,27 @@ const COMPANIES = {
   ionq:         { label: 'IonQ',            queries: ['IonQ quantum computing stock'] },
   quantinuum:   { label: 'Quantinuum',      queries: ['Quantinuum Honeywell quantum'] },
   inflection:   { label: 'Inflection',      queries: ['Inflection AI Pi chatbot'] },
-  // 한국
-  samsung:      { label: '삼성전자',        queries: ['삼성전자 반도체 HBM'] },
-  skhynix:      { label: 'SK하이닉스',      queries: ['SK하이닉스 HBM 반도체'] },
-  celltrion:    { label: '셀트리온',        queries: ['셀트리온 바이오시밀러 주가'] },
-  samsungsdi:   { label: '삼성SDI',         queries: ['삼성SDI 배터리 주가'] },
-  posco:        { label: 'POSCO홀딩스',     queries: ['POSCO홀딩스 철강 주가'] },
-  lgenergy:     { label: 'LG에너지솔루션',  queries: ['LG에너지솔루션 배터리 주가'] },
-  hyundai:      { label: '현대차',          queries: ['현대자동차 전기차 주가'] },
-  hyundaimobis: { label: '현대모비스',      queries: ['현대모비스 부품 주가'] },
-  hyosung:      { label: '효성중공업',      queries: ['효성중공업 전력기기 주가'] },
-  lselectric:   { label: 'LS ELECTRIC',    queries: ['LS ELECTRIC 전력기기 주가'] },
-  hdhyundai:    { label: 'HD현대일렉트릭', queries: ['HD현대일렉트릭 변압기 주가'] },
-  seah:         { label: '세아베스틸지주',  queries: ['세아베스틸 철강 주가'] },
-  poongsan:     { label: '풍산',            queries: ['풍산 동 소재 주가'] },
+  // 한국 (네이버 뉴스 RSS)
+  samsung:      { label: '삼성전자',        queries: ['삼성전자 주가'],      source: 'naver' },
+  skhynix:      { label: 'SK하이닉스',      queries: ['SK하이닉스 주가'],    source: 'naver' },
+  celltrion:    { label: '셀트리온',        queries: ['셀트리온 주가'],      source: 'naver' },
+  samsungsdi:   { label: '삼성SDI',         queries: ['삼성SDI 주가'],       source: 'naver' },
+  posco:        { label: 'POSCO홀딩스',     queries: ['POSCO홀딩스 주가'],   source: 'naver' },
+  lgenergy:     { label: 'LG에너지솔루션',  queries: ['LG에너지솔루션 주가'], source: 'naver' },
+  hyundai:      { label: '현대차',          queries: ['현대차 주가'],        source: 'naver' },
+  hyundaimobis: { label: '현대모비스',      queries: ['현대모비스 주가'],    source: 'naver' },
+  hyosung:      { label: '효성중공업',      queries: ['효성중공업 주가'],    source: 'naver' },
+  lselectric:   { label: 'LS ELECTRIC',    queries: ['LS ELECTRIC 주가'],   source: 'naver' },
+  hdhyundai:    { label: 'HD현대일렉트릭', queries: ['HD현대일렉트릭 주가'], source: 'naver' },
+  seah:         { label: '세아베스틸지주',  queries: ['세아베스틸지주 주가'], source: 'naver' },
+  poongsan:     { label: '풍산',            queries: ['풍산 주가'],          source: 'naver' },
 };
 
 // ── 카테고리별 검색 쿼리 ─────────────────────────────────
 const CATEGORIES = {
   all:           { queries: ['미국 증시 주요 뉴스', '한국 증시 오늘'] },
   'us-market':   { queries: ['S&P500 나스닥 다우존스', '뉴욕증시 오늘'] },
-  'kr-market':   { queries: ['코스피 코스닥 한국 증시'] },
+  'kr-market':   { queries: ['코스피 오늘', '코스닥 오늘', '한국증시 오늘'], source: 'naver' },
   bigtech:       { queries: ['Google Nvidia Tesla IBM Broadcom AI stock'] },
   semiconductor: { queries: ['반도체 HBM 삼성 SK하이닉스', 'TSMC Micron chip AI'] },
   quantum:       { queries: ['IonQ Quantinuum quantum computing', '양자컴퓨터 뉴스'] },
@@ -138,21 +137,15 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('visible'), 2400);
 }
 
-// ── CORS 프록시 fetch ─────────────────────────────────────
+// ── CORS 프록시 fetch (allorigins.win, DART 등 외부 API용) ─
 async function fetchCORS(url) {
-  // corsproxy.io 1차 시도
-  try {
-    const res = await fetch(CONFIG.CORS_PROXY + url, { signal: AbortSignal.timeout(10000) });
-    if (res.ok) return res;
-  } catch { /* fallback */ }
-  // allorigins.win 2차 폴백
   const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, {
     signal: AbortSignal.timeout(12000)
   });
   return res;
 }
 
-// ── Google News RSS 파싱 ──────────────────────────────────
+// ── 뉴스 RSS 파싱 (미국: Google News / 한국: 네이버 뉴스) ──
 function cleanText(str) {
   return String(str || '')
     .replace(/<[^>]*>/g, '')
@@ -161,24 +154,43 @@ function cleanText(str) {
     .trim();
 }
 
-async function fetchRSS(query) {
-  const cacheKey = `rss_${query}`;
+// 네이버 뉴스 RSS는 <source> 태그가 없어 링크 도메인으로 대체
+function extractSource(item, link) {
+  const tagSource = cleanText(item.querySelector('source')?.textContent);
+  if (tagSource) return tagSource;
+  try {
+    return new URL(link).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
+
+async function fetchRSS(query, source = 'google') {
+  const cacheKey = `rss_${source}_${query}`;
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
 
-  const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko`;
-  const res = await fetchCORS(rssUrl);
+  const rssUrl = source === 'naver'
+    ? `https://search.naver.com/rss?where=news&query=${encodeURIComponent(query)}`
+    : `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko`;
+
+  const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`, {
+    signal: AbortSignal.timeout(5000)
+  });
   const xml = await res.text();
 
   const doc   = new DOMParser().parseFromString(xml, 'text/xml');
   const items = [...doc.querySelectorAll('item')].slice(0, 15);
 
-  const articles = items.map(item => ({
-    title:   cleanText(item.querySelector('title')?.textContent),
-    link:    item.querySelector('link')?.textContent?.trim() || '',
-    pubDate: item.querySelector('pubDate')?.textContent?.trim() || '',
-    source:  cleanText(item.querySelector('source')?.textContent),
-  })).filter(a => a.title);
+  const articles = items.map(item => {
+    const link = item.querySelector('link')?.textContent?.trim() || '';
+    return {
+      title:   cleanText(item.querySelector('title')?.textContent),
+      link,
+      pubDate: item.querySelector('pubDate')?.textContent?.trim() || '',
+      source:  extractSource(item, link),
+    };
+  }).filter(a => a.title);
 
   cacheSet(cacheKey, articles, CONFIG.CACHE_TTL);
   return articles;
@@ -308,6 +320,36 @@ function showError(msg) {
   $('errorMessage').textContent = msg;
 }
 
+// ── 복합 캐시 키 ──────────────────────────────────────────
+function buildNewsKey() {
+  if (state.searchMode && state.searchKeyword)
+    return `search_${state.searchKeyword}_${[...state.companies].sort().join(',')}`;
+  if (state.companies.length)
+    return `news__${[...state.companies].sort().join(',')}`;
+  return `news_${state.category}_`;
+}
+
+// ── 스켈레톤 UI ───────────────────────────────────────────
+function showSkeleton() {
+  $('loadingState').classList.add('hidden');
+  $('errorBanner').classList.add('hidden');
+  $('emptyState').classList.add('hidden');
+  $('contentWrap').classList.remove('hidden');
+  $('usMarketSection').classList.remove('hidden');
+  $('krMarketSection').classList.add('hidden');
+  $('listDivider').classList.remove('hidden');
+
+  $('heroGrid').innerHTML =
+    '<div class="sk-hero sk-hero--main skeleton"></div>' +
+    '<div class="sk-hero skeleton"></div>' +
+    '<div class="sk-hero skeleton"></div>';
+
+  $('articleList').innerHTML =
+    Array(6).fill('<div class="sk-row skeleton"></div>').join('');
+
+  $('krArticleList').innerHTML = '';
+}
+
 function renderHeroCard(a, isMain) {
   const sig = signalClass(a.pubDate);
   const cls = isMain ? `hero-card hero-card--main ${sig}` : `hero-card ${sig}`;
@@ -422,7 +464,7 @@ async function loadRateTicker() {
     for (let offset = 0; offset <= 5; offset++) {
       const url = `https://www.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey=${CONFIG.EXIM_API_KEY}&searchdate=${getDateStr(offset)}&data=AP01`;
       try {
-        const res  = await fetchCORS(url);
+        const res  = await fetch(url, { signal: AbortSignal.timeout(8000) });
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0 && data[0]?.result === 1) {
           rates = data.filter(r => MAIN_CURRENCIES.includes(r.cur_unit));
@@ -464,11 +506,16 @@ function renderRateTicker(rates) {
 // ── 뉴스 키워드 티커 ─────────────────────────────────────
 async function loadTicker() {
   try {
-    const queries = state.companies.length
-      ? state.companies.map(k => COMPANIES[k]?.queries[0]).filter(Boolean)
-      : (CATEGORIES[state.category]?.queries || CATEGORIES.all.queries);
+    const queryObjs = state.companies.length
+      ? state.companies.map(k => COMPANIES[k])
+          .filter(Boolean)
+          .map(c => ({ query: c.queries[0], source: c.source || 'google' }))
+      : (CATEGORIES[state.category] || CATEGORIES.all).queries.map(q => ({
+          query: q,
+          source: (CATEGORIES[state.category] || CATEGORIES.all).source || 'google'
+        }));
 
-    const results = await Promise.allSettled(queries.slice(0, 3).map(q => fetchRSS(q)));
+    const results = await Promise.allSettled(queryObjs.slice(0, 3).map(q => fetchRSS(q.query, q.source)));
     const all = results.filter(r => r.status === 'fulfilled').flatMap(r => r.value);
     const keywords = extractKeywords(all);
 
@@ -498,40 +545,58 @@ async function loadTicker() {
 
 // ── 뉴스 데이터 페치 (Google News RSS 직접) ──────────────
 async function fetchNews() {
-  let queries;
+  let queryObjs;
   if (state.companies.length) {
-    queries = state.companies.flatMap(k => COMPANIES[k]?.queries || []);
+    queryObjs = state.companies.flatMap(k => {
+      const c = COMPANIES[k];
+      if (!c) return [];
+      const source = c.source || 'google';
+      return c.queries.map(q => ({ query: q, source }));
+    });
   } else {
-    queries = CATEGORIES[state.category]?.queries || CATEGORIES.all.queries;
+    const cat = CATEGORIES[state.category] || CATEGORIES.all;
+    const source = cat.source || 'google';
+    queryObjs = cat.queries.map(q => ({ query: q, source }));
   }
 
-  const results = await Promise.allSettled(queries.map(q => fetchRSS(q)));
+  const results = await Promise.allSettled(queryObjs.map(q => fetchRSS(q.query, q.source)));
   const all = results.filter(r => r.status === 'fulfilled').flatMap(r => r.value);
   return sortByDate(dedupeByTitle(all)).slice(0, 50);
 }
 
 async function fetchSearchNews(keyword) {
-  const baseQueries = state.companies.length
+  const baseQueryObjs = state.companies.length
     ? state.companies.map(k => {
-        const base = (COMPANIES[k]?.queries[0] || '').split(' ')[0];
-        return `${base} ${keyword}`;
+        const c = COMPANIES[k];
+        const base = (c?.queries[0] || '').split(' ')[0];
+        return { query: `${base} ${keyword}`, source: c?.source || 'google' };
       })
-    : [keyword];
+    : [{ query: keyword, source: 'google' }];
 
-  const results = await Promise.allSettled(baseQueries.map(q => fetchRSS(q)));
+  const results = await Promise.allSettled(baseQueryObjs.map(q => fetchRSS(q.query, q.source)));
   const all = results.filter(r => r.status === 'fulfilled').flatMap(r => r.value);
   return sortByDate(dedupeByTitle(all)).slice(0, 30);
 }
 
 async function fetchAndRender() {
-  showLoading();
   syncUI();
   pushURLState();
+
+  const key = buildNewsKey();
+  const cached = cacheGet(key);
+  if (cached) {
+    state.allArticles = cached;
+    renderArticles(cached);
+    return;
+  }
+
+  showSkeleton();
   try {
     const articles = state.searchMode && state.searchKeyword
       ? await fetchSearchNews(state.searchKeyword)
       : await fetchNews();
     state.allArticles = articles;
+    cacheSet(key, articles, CONFIG.CACHE_TTL);
     renderArticles(articles);
     setLastUpdated();
   } catch (err) {
@@ -752,6 +817,7 @@ function bindEvents() {
   });
 
   $('refreshBtn').addEventListener('click', () => {
+    cache.clear();
     $('refreshBtn').classList.add('spinning');
     Promise.all([fetchAndRender(), loadTicker(), loadRateTicker()])
       .finally(() => $('refreshBtn').classList.remove('spinning'));
@@ -762,10 +828,30 @@ function bindEvents() {
 function startAutoRefresh() {
   if (state.autoRefreshTimer) clearInterval(state.autoRefreshTimer);
   state.autoRefreshTimer = setInterval(() => {
+    cache.clear();
     fetchAndRender();
     loadTicker();
     loadRateTicker();
   }, 5 * 60 * 1000);
+}
+
+// ── 백그라운드 프리페치 ───────────────────────────────────
+async function prefetchCategories() {
+  const order = ['all', 'us-market', 'kr-market', 'bigtech'];
+  for (const cat of order) {
+    const key = `news_${cat}_`;
+    if (cacheGet(key)) continue;
+    const queries = CATEGORIES[cat]?.queries || [];
+    const source  = CATEGORIES[cat]?.source || 'google';
+    try {
+      const results = await Promise.allSettled(queries.map(q => fetchRSS(q, source)));
+      const all = results.filter(r => r.status === 'fulfilled').flatMap(r => r.value);
+      if (all.length) {
+        cacheSet(key, sortByDate(dedupeByTitle(all)).slice(0, 50), CONFIG.CACHE_TTL);
+      }
+    } catch { /* silent */ }
+    await new Promise(r => setTimeout(r, 300));
+  }
 }
 
 // ── 초기화 ────────────────────────────────────────────────
@@ -777,6 +863,7 @@ function init() {
   loadTicker();
   loadRateTicker();
   startAutoRefresh();
+  setTimeout(prefetchCategories, 1500);
 }
 
 document.addEventListener('DOMContentLoaded', init);

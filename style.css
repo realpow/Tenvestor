@@ -3,13 +3,13 @@
 :root {
   --up:        #00c853;
   --down:      #ff3d3d;
-  --bg:        #0f0f0f;
-  --surface:   #1a1a1a;
-  --card:      #222222;
-  --rule:      #2a2a2a;
-  --rule-sub:  #333333;
-  --ink:       #ffffff;
-  --ink-2:     #cccccc;
+  --bg:        #f5f5f5;
+  --surface:   #ffffff;
+  --card:      #f8f8f8;
+  --rule:      #e0e0e0;
+  --rule-sub:  #cccccc;
+  --ink:       #111111;
+  --ink-2:     #333333;
   --ink-3:     #888888;
   --mono:      'IBM Plex Mono', 'Courier New', monospace;
   --r:         8px;
@@ -20,7 +20,7 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-  background: var(--bg);
+  background: #ffffff;
   color: var(--ink-2);
   font-size: 14px;
   line-height: 1.6;
@@ -36,7 +36,7 @@ body {
 
 /* ── Exchange Rate Ticker ────────────────────────────────── */
 .rate-ticker {
-  background: #111111;
+  background: #f0f0f0;
   color: var(--ink-3);
   display: flex;
   align-items: center;
@@ -138,7 +138,7 @@ body {
 
 /* ── News Keyword Ticker ─────────────────────────────────── */
 .ticker-bar {
-  background: var(--surface);
+  background: #f0f0f0;
   color: var(--ink-2);
   display: flex;
   align-items: center;
@@ -221,8 +221,8 @@ body {
 
 /* ── Header ──────────────────────────────────────────────── */
 .header {
-  background: var(--surface);
-  border-bottom: 0.5px solid var(--rule-sub);
+  background: #1a1a1a;
+  border-bottom: 0.5px solid #333;
   position: sticky;
   top: 68px;
   z-index: 200;
@@ -250,8 +250,8 @@ body {
   font-family: var(--mono);
   font-size: 14px;
   font-weight: 600;
-  color: #000;
-  background: var(--ink);
+  color: #111111;
+  background: #ffffff;
   width: 36px;
   height: 36px;
   display: flex;
@@ -326,18 +326,20 @@ body {
   display: flex;
   align-items: center;
   gap: 5px;
-  border: 0.5px solid var(--rule-sub);
-  background: transparent;
+  border: 1px solid #1a1a1a;
+  background: #1a1a1a;
   border-radius: var(--r);
   padding: 7px 11px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--ink-3);
+  color: #ffffff;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: all 0.1s ease;
   font-family: inherit;
+  user-select: none;
 }
-.hdr-btn:hover { color: var(--ink); border-color: var(--ink-3); }
+.hdr-btn:hover { background: #333333; border-color: #333333; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+.hdr-btn:active { transform: translateY(1px); box-shadow: none; }
 
 .hdr-meta {
   display: flex;
@@ -353,8 +355,8 @@ body {
 }
 
 .refresh-btn {
-  border: 0.5px solid var(--rule-sub);
-  background: transparent;
+  border: 1px solid #1a1a1a;
+  background: #1a1a1a;
   border-radius: var(--r);
   width: 30px;
   height: 30px;
@@ -362,12 +364,31 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--ink-3);
-  transition: color 0.15s, border-color 0.15s;
+  color: #ffffff;
+  transition: all 0.1s ease;
+  user-select: none;
 }
-.refresh-btn:hover { color: var(--ink); border-color: var(--ink-3); }
+.refresh-btn:hover { background: #333333; border-color: #333333; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+.refresh-btn:active { transform: translateY(1px); box-shadow: none; }
 .refresh-btn.spinning svg { animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Header: Dark Overrides (헤더만 차콜 유지) ─────────────── */
+.header .logo-title        { color: #ffffff; }
+.header .logo-sub          { color: #888888; }
+.header .search-wrap       { background: #2a2a2a; border-color: #444444; }
+.header .search-wrap:focus-within { border-color: #888888; }
+.header .search-input      { color: #ffffff; }
+.header .search-input::placeholder { color: #666666; }
+.header .search-btn        { color: #888888; }
+.header .search-btn:hover  { color: #ffffff; }
+.header .hdr-btn            { background: transparent; border-color: #444444; color: #888888; box-shadow: none; }
+.header .hdr-btn:hover      { background: #2a2a2a; border-color: #888888; color: #ffffff; box-shadow: none; transform: none; }
+.header .hdr-btn:active     { transform: none; }
+.header #lastUpdated        { color: #888888; }
+.header .refresh-btn        { background: transparent; border-color: #444444; color: #888888; box-shadow: none; }
+.header .refresh-btn:hover  { background: #2a2a2a; border-color: #888888; color: #ffffff; box-shadow: none; transform: none; }
+.header .refresh-btn:active { transform: none; }
 
 /* ── Category Nav ────────────────────────────────────────── */
 .cat-nav {
@@ -386,27 +407,31 @@ body {
   max-width: 1300px;
   margin: 0 auto;
   padding: 0 28px;
+  height: 48px;
   display: flex;
+  align-items: center;
+  gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
 }
 .cat-nav-inner::-webkit-scrollbar { display: none; }
 
 .cat-btn {
-  border: none;
-  background: transparent;
-  padding: 12px 14px;
+  border: 1px solid #dddddd;
+  background: #f0f0f0;
+  border-radius: 6px;
+  padding: 5px 14px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--ink-3);
+  color: #555555;
   cursor: pointer;
   white-space: nowrap;
-  border-bottom: 2px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
+  transition: all 0.15s ease;
   font-family: inherit;
+  user-select: none;
 }
-.cat-btn:hover { color: var(--ink-2); }
-.cat-btn.active { color: var(--ink); border-bottom-color: var(--ink); font-weight: 700; }
+.cat-btn:hover { background: #e0e0e0; color: #333333; transform: translateY(-1px); }
+.cat-btn.active { background: #1a1a1a; color: #ffffff; border-color: #1a1a1a; font-weight: 600; }
 
 /* ── Mode Nav ────────────────────────────────────────────── */
 .mode-nav {
@@ -420,29 +445,31 @@ body {
 .mode-nav-inner {
   max-width: 1300px;
   margin: 0 auto;
-  padding: 0 28px;
+  padding: 2px 28px;
   display: flex;
-  gap: 0;
+  align-items: center;
+  gap: 6px;
 }
 
 .mode-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  border: none;
-  background: transparent;
-  padding: 9px 16px;
+  border: 1px solid #dddddd;
+  background: #f0f0f0;
+  border-radius: 6px;
+  padding: 7px 14px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--ink-3);
+  color: #555555;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
+  transition: all 0.15s ease;
   font-family: inherit;
   white-space: nowrap;
+  user-select: none;
 }
-.mode-btn:hover { color: var(--ink-2); }
-.mode-btn.active { color: var(--ink); border-bottom-color: var(--ink); font-weight: 700; }
+.mode-btn:hover { background: #e0e0e0; color: #333333; transform: translateY(-1px); }
+.mode-btn.active { background: #1a1a1a; color: #ffffff; border-color: #1a1a1a; font-weight: 600; }
 
 /* ── Filter Bar ──────────────────────────────────────────── */
 .filter-bar {
@@ -495,20 +522,21 @@ body {
 }
 
 .co-btn {
-  border: 0.5px solid var(--rule-sub);
-  background: transparent;
+  border: 1px solid #cccccc;
+  background: #ffffff;
   border-radius: 20px;
   padding: 3px 11px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--ink-3);
+  color: #333333;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
   white-space: nowrap;
   font-family: inherit;
+  user-select: none;
 }
-.co-btn:hover { border-color: var(--ink-3); color: var(--ink-2); }
-.co-btn.active { background: var(--ink); border-color: var(--ink); color: #000; }
+.co-btn:hover { border-color: #999999; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.co-btn.active { background: #1a1a1a; border-color: #1a1a1a; color: #ffffff; box-shadow: none; }
 
 /* 미국/한국 종목 구분 레이블 색 */
 .co-btn--us { color: var(--ink-3); }
@@ -529,18 +557,20 @@ body {
   font-weight: 500;
   color: var(--ink-3);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
   font-family: inherit;
+  user-select: none;
 }
 .date-btn:last-child { border-right: none; }
 .date-btn:hover { background: var(--rule); color: var(--ink-2); }
-.date-btn.active { background: var(--ink); color: #000; font-weight: 600; }
+.date-btn.active { background: #1a1a1a; color: #ffffff; font-weight: 600; }
 
 /* ── Main ────────────────────────────────────────────────── */
 .main {
   max-width: 1300px;
   margin: 0 auto;
   padding: 28px 28px 80px;
+  background: var(--bg);
 }
 
 /* ── Market Section ──────────────────────────────────────── */
@@ -947,22 +977,24 @@ body {
 .corp-name-input::placeholder { color: var(--ink-3); }
 
 .corp-search-btn {
-  background: var(--ink);
-  color: #000;
-  border: none;
-  border-radius: var(--r);
+  background: #1a1a1a;
+  color: #ffffff;
+  border: 1px solid #1a1a1a;
+  border-radius: 6px;
   padding: 0 22px;
   height: 44px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  transition: opacity 0.15s;
+  transition: all 0.15s ease;
   font-family: inherit;
   flex-shrink: 0;
+  user-select: none;
 }
-.corp-search-btn:hover { opacity: 0.85; }
-.corp-search-btn:disabled { opacity: 0.4; cursor: default; }
+.corp-search-btn:hover { background: #333333; border-color: #333333; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.corp-search-btn:active { transform: translateY(1px); box-shadow: none; }
+.corp-search-btn:disabled { opacity: 0.4; cursor: default; box-shadow: none; transform: none; }
 
 /* ── Corp Search Results ─────────────────────────────────── */
 .corp-search-results {
@@ -1088,7 +1120,7 @@ body {
 }
 
 .corp-badge--stock {
-  background: rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.06);
   border-color: var(--ink-3);
   color: var(--ink-2);
 }
@@ -1156,7 +1188,7 @@ body {
   left: 50%;
   transform: translateX(-50%) translateY(12px);
   background: var(--ink);
-  color: #000;
+  color: #ffffff;
   font-size: 13px;
   font-weight: 600;
   padding: 10px 20px;
@@ -1168,6 +1200,22 @@ body {
   white-space: nowrap;
 }
 .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Skeleton UI ─────────────────────────────────────────── */
+@keyframes sk-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+.skeleton {
+  background-color: #eeeeee;
+  border-radius: var(--r);
+  animation: sk-pulse 1.4s ease-in-out infinite;
+}
+
+.sk-hero--main { grid-column: 1 / 3; height: 176px; }
+.sk-hero       { height: 140px; }
+.sk-row        { height: 60px; border-radius: 0; border-bottom: 0.5px solid var(--rule); }
 
 /* ── Utilities ───────────────────────────────────────────── */
 .hidden { display: none !important; }
