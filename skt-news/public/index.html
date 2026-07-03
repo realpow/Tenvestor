@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TENVESTOR — 투자 인텔리전스 브리핑</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- 환율 티커 (최상단 고정, 좌→우 스크롤) -->
+  <div class="rate-ticker" id="rateTicker">
+    <span class="rate-ticker-label">FX</span>
+    <div class="rate-ticker-track">
+      <div class="rate-ticker-inner" id="rateTickerInner">
+        <span class="rate-ticker-loading">환율 불러오는 중...</span>
+      </div>
+    </div>
+    <span class="rate-ticker-source">한국수출입은행</span>
+  </div>
+
+  <!-- 뉴스 키워드 티커 -->
+  <div class="ticker-bar" id="tickerBar">
+    <span class="ticker-label">NOW</span>
+    <div class="ticker-track">
+      <div class="ticker-inner" id="tickerInner">
+        <span class="ticker-loading">이슈 분석 중...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 헤더 -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-mark">T</span>
+        <div class="logo-text">
+          <span class="logo-title">TENVESTOR</span>
+          <span class="logo-sub">투자 인텔리전스 브리핑</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="search-wrap" id="searchWrap">
+          <input type="text" id="searchInput" class="search-input" placeholder="검색어 입력..." autocomplete="off" />
+          <button class="search-btn" id="searchBtn" aria-label="검색">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </button>
+        </div>
+        <button class="hdr-btn" id="shareBtn" title="링크 공유">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          <span>공유</span>
+        </button>
+        <div class="hdr-meta">
+          <span id="lastUpdated"></span>
+          <button class="refresh-btn" id="refreshBtn" title="새로고침">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polyline points="23 4 23 10 17 10"/>
+              <polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 카테고리 탭 (뉴스 모드) -->
+  <nav class="cat-nav" id="categoryNav">
+    <div class="cat-nav-inner">
+      <button class="cat-btn active" data-category="all">전체</button>
+      <button class="cat-btn" data-category="us-market">미국증시</button>
+      <button class="cat-btn" data-category="kr-market">한국증시</button>
+      <button class="cat-btn" data-category="bigtech">빅테크</button>
+      <button class="cat-btn" data-category="semiconductor">반도체</button>
+      <button class="cat-btn" data-category="quantum">양자</button>
+      <button class="cat-btn" data-category="bond-fx">채권/환율</button>
+      <button class="cat-btn" data-category="commodity">원자재</button>
+    </div>
+  </nav>
+
+  <!-- 모드 탭 바 -->
+  <nav class="mode-nav" id="modeNav">
+    <div class="mode-nav-inner">
+      <button class="mode-btn active" data-mode="news">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        뉴스
+      </button>
+      <button class="mode-btn" data-mode="corp">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+        기업개요
+      </button>
+    </div>
+  </nav>
+
+  <!-- 필터 바 (뉴스 모드 전용) -->
+  <div class="filter-bar" id="filterBar">
+    <div class="filter-inner">
+      <div class="fgroup">
+        <span class="flabel">종목</span>
+        <div class="company-row">
+          <!-- 미국 -->
+          <button class="co-btn co-btn--us" data-company="google">Google</button>
+          <button class="co-btn co-btn--us" data-company="ibm">IBM</button>
+          <button class="co-btn co-btn--us" data-company="nvidia">Nvidia</button>
+          <button class="co-btn co-btn--us" data-company="micron">Micron</button>
+          <button class="co-btn co-btn--us" data-company="sandisk">SanDisk</button>
+          <button class="co-btn co-btn--us" data-company="marvell">Marvell</button>
+          <button class="co-btn co-btn--us" data-company="broadcom">Broadcom</button>
+          <button class="co-btn co-btn--us" data-company="tesla">Tesla</button>
+          <button class="co-btn co-btn--us" data-company="spacex">SpaceX</button>
+          <button class="co-btn co-btn--us" data-company="ionq">IonQ</button>
+          <button class="co-btn co-btn--us" data-company="quantinuum">Quantinuum</button>
+          <button class="co-btn co-btn--us" data-company="inflection">Inflection</button>
+          <span class="co-sep"></span>
+          <!-- 한국 -->
+          <button class="co-btn co-btn--kr" data-company="samsung">삼성전자</button>
+          <button class="co-btn co-btn--kr" data-company="skhynix">SK하이닉스</button>
+          <button class="co-btn co-btn--kr" data-company="celltrion">셀트리온</button>
+          <button class="co-btn co-btn--kr" data-company="samsungsdi">삼성SDI</button>
+          <button class="co-btn co-btn--kr" data-company="posco">POSCO홀딩스</button>
+          <button class="co-btn co-btn--kr" data-company="lgenergy">LG에너지솔루션</button>
+          <button class="co-btn co-btn--kr" data-company="hyundai">현대차</button>
+          <button class="co-btn co-btn--kr" data-company="hyundaimobis">현대모비스</button>
+          <button class="co-btn co-btn--kr" data-company="hyosung">효성중공업</button>
+          <button class="co-btn co-btn--kr" data-company="lselectric">LS ELECTRIC</button>
+          <button class="co-btn co-btn--kr" data-company="hdhyundai">HD현대일렉트릭</button>
+          <button class="co-btn co-btn--kr" data-company="seah">세아베스틸지주</button>
+          <button class="co-btn co-btn--kr" data-company="poongsan">풍산</button>
+        </div>
+      </div>
+      <div class="fgroup fgroup--right">
+        <span class="flabel">기간</span>
+        <div class="date-seg">
+          <button class="date-btn active" data-date="overnight">간밤</button>
+          <button class="date-btn" data-date="today">오늘</button>
+          <button class="date-btn" data-date="week">이번 주</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메인 -->
+  <main class="main">
+
+    <!-- ── 뉴스 모드 ────────────────────────────────────── -->
+    <div id="newsMode">
+
+      <div id="errorBanner" class="error-banner hidden">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span id="errorMessage">오류가 발생했습니다.</span>
+      </div>
+
+      <div id="loadingState" class="loading-state">
+        <div class="spinner"></div>
+        <p>뉴스를 불러오는 중...</p>
+      </div>
+
+      <div id="contentWrap" class="content-wrap hidden">
+
+        <!-- 섹션 1: 간밤의 미국 증시 -->
+        <div class="market-section" id="usMarketSection">
+          <div class="market-section-head">
+            <div class="market-section-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span>간밤의 미국 증시</span>
+              <span class="market-section-badge" id="usMarketTime"></span>
+            </div>
+          </div>
+
+          <!-- 지수 카드 -->
+          <div class="index-cards" id="usIndexCards">
+            <div class="index-card" data-index="dow">
+              <span class="index-name">DOW</span>
+              <span class="index-value" id="dowValue">--</span>
+              <span class="index-change" id="dowChange">--%</span>
+            </div>
+            <div class="index-card" data-index="sp500">
+              <span class="index-name">S&amp;P 500</span>
+              <span class="index-value" id="spValue">--</span>
+              <span class="index-change" id="spChange">--%</span>
+            </div>
+            <div class="index-card" data-index="nasdaq">
+              <span class="index-name">NASDAQ</span>
+              <span class="index-value" id="nasdaqValue">--</span>
+              <span class="index-change" id="nasdaqChange">--%</span>
+            </div>
+            <div class="index-card" data-index="vix">
+              <span class="index-name">VIX</span>
+              <span class="index-value" id="vixValue">--</span>
+              <span class="index-change" id="vixChange">--</span>
+            </div>
+          </div>
+
+          <!-- 미국 뉴스 헤드라인 -->
+          <div class="section-head">
+            <span class="section-label" id="statusLabel">전체</span>
+            <span class="section-count" id="articleCount"></span>
+            <span class="section-search" id="searchStatus"></span>
+          </div>
+          <div class="hero-grid" id="heroGrid"></div>
+          <div class="list-divider" id="listDivider"><span>더보기</span></div>
+          <div class="article-list" id="articleList"></div>
+        </div>
+
+        <!-- 섹션 2: 한국 증시 & 플레이어 -->
+        <div class="market-section market-section--kr" id="krMarketSection">
+          <div class="market-section-head">
+            <div class="market-section-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+              <span>한국 증시 &amp; 플레이어</span>
+            </div>
+          </div>
+
+          <!-- 지수 카드 -->
+          <div class="index-cards" id="krIndexCards">
+            <div class="index-card" data-index="kospi">
+              <span class="index-name">KOSPI</span>
+              <span class="index-value" id="kospiValue">--</span>
+              <span class="index-change" id="kospiChange">--%</span>
+            </div>
+            <div class="index-card" data-index="kosdaq">
+              <span class="index-name">KOSDAQ</span>
+              <span class="index-value" id="kosdaqValue">--</span>
+              <span class="index-change" id="kosdaqChange">--%</span>
+            </div>
+            <div class="index-card" data-index="usdkrw">
+              <span class="index-name">USD/KRW</span>
+              <span class="index-value" id="usdkrwValue">--</span>
+              <span class="index-change" id="usdkrwChange">--</span>
+            </div>
+          </div>
+
+          <!-- 한국 뉴스 헤드라인 -->
+          <div class="article-list article-list--kr" id="krArticleList"></div>
+        </div>
+
+      </div>
+
+      <div id="emptyState" class="empty-state hidden">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <p id="emptyMessage">해당 조건의 뉴스가 없습니다.</p>
+      </div>
+
+    </div>
+
+    <!-- ── 기업개요 모드 ─────────────────────────────────── -->
+    <div id="corpMode" class="hidden">
+
+      <div class="corp-search-section">
+        <div class="corp-search-box">
+          <div class="corp-search-header">
+            <span class="corp-search-title">DART 기업개황 조회</span>
+            <span class="corp-search-desc">금융감독원 전자공시시스템(DART)의 공식 기업 정보를 조회합니다.</span>
+          </div>
+          <div class="corp-input-row">
+            <div class="corp-input-wrap">
+              <label class="corp-input-label" for="corpNameInput">회사명</label>
+              <input type="text" id="corpNameInput" class="corp-name-input"
+                     placeholder="예) 삼성전자, SK하이닉스" autocomplete="off" />
+            </div>
+            <button class="corp-search-btn" id="corpSearchBtn">검색</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="corpLoading" class="loading-state hidden">
+        <div class="spinner"></div>
+        <p id="corpLoadingMsg">기업 목록을 불러오는 중...</p>
+      </div>
+
+      <div id="corpError" class="error-banner hidden" style="margin-top:0;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span id="corpErrorMsg"></span>
+      </div>
+
+      <div id="corpSearchResults" class="corp-search-results hidden"></div>
+      <div id="corpResult" class="corp-result hidden"></div>
+
+    </div>
+
+  </main>
+
+  <!-- 푸터 -->
+  <footer class="footer">
+    <span>출처: Google 뉴스 · DART · 한국수출입은행</span>
+    <span class="foot-sep">|</span>
+    <span>5분 자동 갱신</span>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
