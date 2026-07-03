@@ -1,10 +1,10 @@
 'use strict';
 
-// ── 설정 ──────────────────────────────────────────────────
-// 확인 필요: 한국수출입은행 API 키 (https://www.koreaexim.go.kr 에서 발급)
+// ── 설정 (API 키는 config.js에서 주입, 절대 여기에 하드코딩하지 말 것) ──
+const _ext = window.TENVESTOR_CONFIG || {};
 const CONFIG = {
-  EXIM_API_KEY: 'SEU6wpviRp8Z79d8iBiXxijWUvyefPjA',
-  DART_API_KEY: 'd0331ea6a2bc04d8f9e65b51592a2f611d4dbda5',
+  EXIM_API_KEY: _ext.EXIM_API_KEY || '',
+  DART_API_KEY: _ext.DART_API_KEY || '',
   CORS_PROXY:   'https://corsproxy.io/?',
   CACHE_TTL:    5  * 60 * 1000,
   EXIM_TTL:     30 * 60 * 1000,
@@ -411,11 +411,16 @@ async function loadRateTicker() {
     return;
   }
 
+  if (!CONFIG.EXIM_API_KEY) {
+    $('rateTickerInner').innerHTML = '<span class="rate-ticker-loading">config.js에 EXIM_API_KEY를 설정하세요</span>';
+    return;
+  }
+
   try {
     let rates = [];
     // 영업일 기준 최근 5일 재시도 (원본 server.js 방식)
     for (let offset = 0; offset <= 5; offset++) {
-      const url = `https://oapi.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey=${CONFIG.EXIM_API_KEY}&searchdate=${getDateStr(offset)}&data=AP01`;
+      const url = `https://www.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey=${CONFIG.EXIM_API_KEY}&searchdate=${getDateStr(offset)}&data=AP01`;
       try {
         const res  = await fetchCORS(url);
         const data = await res.json();

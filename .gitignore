@@ -14,3 +14,6 @@ Thumbs.db
 # Editor
 .vscode/
 *.swp
+
+# API 키 설정 파일 (절대 커밋하지 말 것)
+config.js
